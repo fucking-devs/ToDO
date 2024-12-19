@@ -1,4 +1,6 @@
 <script>
+import axios from 'axios'
+
 export default {
   name: 'QueueComponent',
   data() {
@@ -12,46 +14,35 @@ export default {
     this.fetchQueues()
   },
   methods: {
-    fetchQueues() {
-      fetch('/queues')
-        .then(response => response.json())
-        .then(data => {
-          this.queues = data
-        })
+    async fetchQueues() {
+      const { data } = await axios.get('/queues')
+
+      this.queues = data
+      
     },
-    createQueue() {
-      fetch('/queues', {
-        method: 'POST',
+    async createQueue() {
+      const { data } = await axios.post('/queues', { title: this.newQueueTitle }, {
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ title: this.newQueueTitle })
+        }
       })
-        .then(response => response.json())
-        .then(data => {
-          this.queues.push(data)
-          this.newQueueTitle = ''
-        })
+      this.queues.push(data)
+      this.newQueueTitle = ''
     },
-    addTaskToQueue(queueId) {
-      fetch(`/queues/${queueId}/tasks`, {
-        method: 'POST',
+    async addTaskToQueue(queueId) {
+      const data = await axios.get(`/queues/${queueId}/tasks`,{ title: this.newTaskTitle }, {
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ title: this.newTaskTitle })
+        }
       })
-        .then(response => response.json())
-        .then(data => {
-          const queue = this.queues.find(q => q.id === queueId)
-          queue.tasks.push(data.task)
-          this.newTaskTitle = ''
-        })
+      const queue = this.queues.find(q => q.id === queueId)
+      queue.tasks.push(data.task)
+      this.newTaskTitle = ''
     },
-    updateQueueTitle(queue) {
+    async updateQueueTitle(queue) {
       const newTitle = prompt('Enter new queue title', queue.title)
       if (newTitle) {
-        fetch(`/queues/${queue.id}`, {
+        await fetch(`/queues/${queue.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -64,8 +55,8 @@ export default {
           })
       }
     },
-    deleteQueue(queue) {
-      fetch(`/queues/${queue.id}`, {
+    async deleteQueue(queue) {
+      await fetch(`/queues/${queue.id}`, {
         method: 'DELETE'
       })
         .then(response => response.json())
@@ -74,8 +65,8 @@ export default {
           this.queues.splice(index, 1)
         })
     },
-    toggleTaskStatus(queue, task) {
-      fetch(`/queues/${queue.id}/tasks/${task.id}`, {
+    async toggleTaskStatus(queue, task) {
+      await fetch(`/queues/${queue.id}/tasks/${task.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -87,8 +78,8 @@ export default {
           task.completeness = data.completeness
         })
     },
-    deleteTask(queue, task) {
-      fetch(`/queues/${queue.id}/tasks/${task.id}`, {
+    async deleteTask(queue, task) {
+      await fetch(`/queues/${queue.id}/tasks/${task.id}`, {
         method: 'DELETE'
       })
         .then(response => response.json())
@@ -106,12 +97,12 @@ export default {
     <header class="board-header">
       <h1 class="board-title">To Do</h1>
       <div class="add-column">
-        <input type="text" class="column-input" v-model="newColumnTitle" placeholder="Add a new column" />
-        <button class="action-button" @click="addColumn">Add</button>
+        <input type="text" class="column-input" v-model="newQueueTitle" placeholder="Add a new column" />
+        <button class="action-button" @click="createQueue">Add</button>
       </div>
     </header>
     <div class="board-columns">
-      <div class="column" v-for="column in columns" :key="column.id">
+      <div class="column" v-for="column in queues" :key="column.id" v-if="queues.length !== 0">
         <div class="column-header">
           <h2 class="column-title">{{ column.title }}</h2>
           <div class="column-actions">
@@ -134,7 +125,7 @@ export default {
           </div>
           <div class="add-task">
             <input type="text" class="task-input" v-model="newTaskTitle" placeholder="Add a new task" />
-            <button class="action-button" @click="addTask(column.id)">Add</button>
+            <button class="action-button" @click="addTaskToQueue(column.id)">Add</button>
           </div>
         </div>
       </div>

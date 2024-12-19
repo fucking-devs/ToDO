@@ -2,21 +2,21 @@ import { Router } from "express";
 import Queue from "../Models/Queue";
 import Task from "../Models/Task";
 
-export const queueRouter = Router();
+const queueRouter = Router();
 
-queueRouter.get("/queue", async (req, res) => {
+queueRouter.get("/queues", async (req, res) => {
   const queues = await Queue.find().populate("tasks");
   res.send(queues);
 });
 
-queueRouter.post("/queue", async (req, res) => {
+queueRouter.post("/queues", async (req, res) => {
   const { title } = req.body;
   const queue = new Queue({ title });
   const savedQueue = await queue.save();
   res.send(savedQueue);
 });
 
-queueRouter.put("/queue/:id", async (req, res) => {
+queueRouter.put("/queues/:id", async (req, res) => {
   const { id } = req.params;
   const { title, tasks } = req.body;
 
@@ -28,13 +28,13 @@ queueRouter.put("/queue/:id", async (req, res) => {
   res.send(updatedQueue);
 });
 
-queueRouter.delete("/queue/:id", async (req, res) => {
+queueRouter.delete("/queues/:id", async (req, res) => {
   const { id } = req.params;
   await Queue.findByIdAndDelete(id);
   res.send({ message: "Очередь удалена" });
 });
 
-queueRouter.post("/queue/:id/tasks", async (req, res) => {
+queueRouter.post("/queues/:id/tasks", async (req, res) => {
   const { id } = req.params;
   const { title } = req.body;
 
@@ -53,3 +53,5 @@ queueRouter.post("/queue/:id/tasks", async (req, res) => {
     res.send({ message: "Ошибка при добавлении задачи в очередь", error });
   }
 });
+
+export default queueRouter

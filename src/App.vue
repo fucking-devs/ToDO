@@ -2,7 +2,6 @@
   <div id="app">
     <h2>Управление задачами и очередями</h2>
     <QueueComponent />
-    <TaskComponent />
   </div>
 </template>
 
